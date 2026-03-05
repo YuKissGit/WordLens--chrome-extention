@@ -1,62 +1,63 @@
 // background.js
 
-// 监听来自 content script 的消息
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "FETCH_DATA") {
-    handleRequests(request.word).then(sendResponse);
-    return true; // 保持消息通道开启以进行异步响应
-  }
+    if (request.action === 'fetchData') {
+        handleFetch(request.word).then(sendResponse);
+        return true; // Keep message channel open for async response
+    }
+    if (request.action === 'openWordbook') {
+        chrome.tabs.create({ url: chrome.runtime.getURL('wordbook.html') });
+        sendResponse({ success: true });
+    }
 });
 
-async function handleRequests(word) {
-  try {
-    // 1. 获取存储的配置
-    const settings = await chrome.storage.sync.get(['googleApiKey', 'googleCx', 'customUrl']);
-    
-    // 2. 并行发起请求
-    const [images, definitions] = await Promise.allSettled([
-      fetchGoogleImages(word, settings.googleApiKey, settings.googleCx),
-      fetchDictionary(word)
-    ]);
+async function handleFetch(word) {
+    try {
+        const syncData = await chrome.storage.sync.get(['pixabayKey']);
+        const { pixabayKey } = syncData;
 
-    return {
-      images: images.status === 'fulfilled' ? images.value : [],
-      definitions: definitions.status === 'fulfilled' ? definitions.value : null,
-      customUrl: settings.customUrl || "",
-      error: null
-    };
+        let images = [];
+        let imageError = null;
 
-  } catch (error) {
-    return { error: error.message };
-  }
-}
+        if (!pixabayKey) {
+            imageError = 'Pixabay API Key not configured in Popup.';
+        } else {
+            try {
+                // Fetch 10 images from Pixabay
+                const pixabayRes = await fetch(`https://pixabay.com/api/?key=${pixabayKey}&q=${encodeURIComponent(word)}&per_page=10&image_type=photo`);
+                const pixabayData = await pixabayRes.json();
 
-// Google Custom Search API
-async function fetchGoogleImages(query, apiKey, cx) {
-  if (!apiKey || !cx) return []; // 未配置时不请求
+                if (pixabayRes.ok && pixabayData.hits) {
+                    const pixabayImages = pixabayData.hits.map(item => ({
+                        thumbnail: item.previewURL,
+                        contextLink: item.pageURL,
+                        source: 'pixabay'
+                    }));
+                    images = images.concat(pixabayImages);
+                } else if (pixabayData.error) {
+                    imageError = 'Pixabay Error: ' + pixabayData.error;
+                }
+            } catch (e) {
+                imageError = e.message;
+            }
+        }
 
-  const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${cx}&q=${encodeURIComponent(query)}&searchType=image&num=10`;
-  
-  const response = await fetch(url);
-  const data = await response.json();
-  
-  if (data.items) {
-    return data.items.map(item => ({
-      thumbnail: item.image.thumbnailLink || item.link,
-      link: item.link,
-      title: item.title
-    }));
-  }
-  return [];
-}
+        let dictData = null;
+        let dictError = null;
+        try {
+            const dictRes = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+            if (dictRes.ok) {
+                const json = await dictRes.json();
+                dictData = json;
+            } else {
+                dictError = 'Word meaning not found.';
+            }
+        } catch (e) {
+            dictError = e.message;
+        }
 
-// DictionaryAPI.dev
-async function fetchDictionary(word) {
-  const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`;
-  const response = await fetch(url);
-  
-  if (!response.ok) return null;
-  
-  const data = await response.json();
-  return data; // 返回数组
+        return { images, imageError, dictData, dictError };
+    } catch (error) {
+        return { error: error.message };
+    }
 }
