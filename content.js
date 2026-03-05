@@ -1,14 +1,14 @@
-// content.js
 let popupNode = null;
 let currentWord = '';
 let isAutoAddOn = false;
+let isAutoPlayOn = false;
 let fetchedDataCache = null;
 
 function createPopup() {
     if (popupNode) return popupNode;
     const host = document.createElement('div');
     host.id = 'wordlens-extension-host';
-    host.style.position = 'absolute';
+    host.style.position = 'fixed';
     host.style.zIndex = '2147483647';
     host.style.display = 'none';
     document.body.appendChild(host);
@@ -21,7 +21,7 @@ function createPopup() {
     shadow.appendChild(link);
 
     const container = document.createElement('div');
-    container.className = 'wl-container';
+    container.className = 'container';
     shadow.appendChild(container);
 
     popupNode = { host, shadow, container };
@@ -30,10 +30,14 @@ function createPopup() {
     container.addEventListener('mousedown', e => {
         if (e.target.closest('.wl-header-drag')) {
             isDragging = true;
+            const rect = host.getBoundingClientRect();
+            host.style.transform = 'none';
+            host.style.left = rect.left + 'px';
+            host.style.top = rect.top + 'px';
             startX = e.clientX;
             startY = e.clientY;
-            initialLeft = host.offsetLeft;
-            initialTop = host.offsetTop;
+            initialLeft = rect.left;
+            initialTop = rect.top;
             e.preventDefault();
         }
     });
@@ -76,33 +80,44 @@ function showPopup(rect, text) {
     const { host, container, shadow } = createPopup();
     fetchedDataCache = null; // reset cache for new word
 
-    let top = rect.bottom + window.scrollY + 10;
-    let left = rect.left + window.scrollX;
-
+    host.style.left = '50%';
+    host.style.top = '50%';
+    host.style.transform = 'translate(-50%, -50%)';
     host.style.display = 'block';
 
     container.innerHTML = `
-    <div class="wl-header wl-header-drag">
-      <div class="wl-title">${text}</div>
-      <button class="wl-close">&times;</button>
-    </div>
-    <div class="wl-toolbar">
-      <button id="wl-btn-custom-dict">Dictionary</button>
-      <button id="wl-btn-wordbook">View Wordbook</button>
-      <button id="wl-btn-add" class="wl-btn-action">Add</button>
-      <button id="wl-btn-remove" class="wl-btn-action">Remove</button>
-      <label class="wl-toggle"><input type="checkbox" id="wl-auto-add"> Auto-add</label>
-    </div>
-    <div class="wl-content">
-      <div class="wl-section">
-        <h3>Images</h3>
-        <div id="wl-images-container">Loading images...</div>
-      </div>
-      <div class="wl-section">
-        <h3>Definition</h3>
-        <div id="wl-dict-container">Loading dictionary...</div>
-      </div>
-    </div>
+  
+
+        <div class="wl-header wl-header-drag">
+            <div class="wl-title">${text}</div>
+            
+            <button class="wl-close">&times;</button>
+        </div>
+
+        <div class="wl-toolbar">
+            <div class="wl-btn-dictionarys" id="wl-dictionaries-container">
+                <!-- Dictionary buttons will be injected here -->
+            </div>
+
+            <div class="wl-btn-wordbook">
+                <button id="wl-btn-wordbook">Wordbook</button>
+                <button id="wl-btn-add" class="wl-btn-action">Add this word</button>
+                <button id="wl-btn-remove" class="wl-btn-action">Remove this word</button>
+                <label class="wl-toggle"><input type="checkbox" id="wl-auto-add"> Auto-add</label>
+            </div>
+        </div>
+
+        <div class="wl-content">
+            <div class="wl-section">
+                <div id="wl-images-container">Loading images...</div>
+            </div>
+
+            <div class="wl-section">
+                <div id="wl-dict-container">Loading dictionary...</div>
+            </div>
+        </div>
+
+
   `;
 
     shadow.querySelector('.wl-close').onclick = () => {
@@ -110,11 +125,39 @@ function showPopup(rect, text) {
         host.style.left = '-9999px';
     };
 
-    shadow.querySelector('#wl-btn-custom-dict').onclick = (e) => handleCustomDictClick(e, text);
-    shadow.querySelector('#wl-btn-custom-dict').oncontextmenu = (e) => {
-        e.preventDefault();
-        alert('Please go to the extension popup to modify the custom dictionary URL.');
-    };
+    // Load custom dictionaries and render buttons
+    chrome.storage.sync.get(['dictionaries', 'customDictUrl'], (syncData) => {
+        const dictContainer = shadow.querySelector('#wl-dictionaries-container');
+        let dicts = [];
+
+        if (syncData.dictionaries && syncData.dictionaries.length > 0) {
+            dicts = syncData.dictionaries;
+        } else if (syncData.customDictUrl) {
+            dicts = [{ name: 'Dictionary', url: syncData.customDictUrl }];
+        } else {
+            dicts = [{ name: 'Cambridge', url: 'https://dictionary.cambridge.org/dictionary/english/' }];
+        }
+
+        dicts.forEach(d => {
+            const btn = document.createElement('button');
+            btn.textContent = d.name || 'Dict';
+            btn.className = 'wl-btn-dict';
+            btn.onclick = (e) => {
+                let url = d.url;
+                // Make sure the base URL ends appropriately before appending
+                if (!url.endsWith('/') && !url.includes('=')) {
+                    url += '/';
+                }
+                url += encodeURIComponent(text);
+                window.open(url, '_blank');
+            };
+            btn.oncontextmenu = (e) => {
+                e.preventDefault();
+                alert('Please go to the extension popup to modify dictionaries.');
+            };
+            dictContainer.appendChild(btn);
+        });
+    });
 
     shadow.querySelector('#wl-btn-wordbook').onclick = () => {
         chrome.runtime.sendMessage({ action: 'openWordbook' });
@@ -132,26 +175,16 @@ function showPopup(rect, text) {
 
     shadow.querySelector('#wl-btn-add').onclick = () => saveWordData();
     shadow.querySelector('#wl-btn-remove').onclick = () => removeWordData();
-
-    setTimeout(() => {
-        const hostRect = container.getBoundingClientRect();
-        if (left + hostRect.width > window.innerWidth + window.scrollX) {
-            left = window.innerWidth + window.scrollX - hostRect.width - 20;
-        }
-        if (top + hostRect.height > window.innerHeight + window.scrollY) {
-            top = rect.top + window.scrollY - hostRect.height - 10;
-        }
-        host.style.left = Math.max(0, left) + 'px';
-        host.style.top = Math.max(0, top) + 'px';
-    }, 0);
 }
 
 async function loadSettingsAndState() {
     const shadow = popupNode.shadow;
     const autoAddCheckbox = shadow.querySelector('#wl-auto-add');
+    const wordbookBtn = shadow.querySelector('#wl-btn-wordbook');
 
-    const res = await chrome.storage.local.get(['autoAddConfig', 'wordbook']);
+    const res = await chrome.storage.local.get(['autoAddConfig', 'autoPlayConfig', 'wordbook']);
     isAutoAddOn = !!res.autoAddConfig;
+    isAutoPlayOn = !!res.autoPlayConfig;
     const wbLength = (res.wordbook || []).length;
 
     if (wbLength >= 100) {
@@ -160,10 +193,18 @@ async function loadSettingsAndState() {
         autoAddCheckbox.disabled = true;
         shadow.querySelector('#wl-btn-add').disabled = true;
         shadow.querySelector('#wl-btn-remove').disabled = true;
+        if (wordbookBtn) {
+            wordbookBtn.classList.add('wl-btn-full');
+            wordbookBtn.title = 'wordbook is full, please clear wordbook';
+        }
     } else {
         autoAddCheckbox.disabled = false;
         autoAddCheckbox.checked = isAutoAddOn;
         updateActionButtons();
+        if (wordbookBtn) {
+            wordbookBtn.classList.remove('wl-btn-full');
+            wordbookBtn.title = '';
+        }
     }
 }
 
@@ -252,7 +293,8 @@ async function fetchWordData(word) {
                     meaningsHtml += ` <span class="wl-meaning-phonetic">${escapeHtml(extractedData.phonetic)}</span>`;
                 }
                 if (extractedData.audio) {
-                    meaningsHtml += ` <button class="wl-meaning-audio-btn" onclick="new Audio('${extractedData.audio}').play()">&#128266;</button>`;
+                    meaningsHtml += ` <button class="wl-meaning-audio-btn" data-audio="${extractedData.audio}">&#128266;</button>`;
+                    meaningsHtml += ` <label class="wl-toggle wl-audio-auto-play"><input type="checkbox" id="wl-auto-play"> Auto-play</label>`;
                 }
                 meaningsHtml += `</div>`;
 
@@ -318,6 +360,28 @@ async function fetchWordData(word) {
                 fetchedDataCache.extracted = extractedData;
                 dictCont.innerHTML = meaningsHtml;
 
+                const audioBtn = dictCont.querySelector('.wl-meaning-audio-btn');
+                const autoPlayCheckbox = dictCont.querySelector('#wl-auto-play');
+
+                if (audioBtn) {
+                    const audioUrl = audioBtn.getAttribute('data-audio');
+                    audioBtn.onclick = () => {
+                        chrome.runtime.sendMessage({ action: 'playAudio', url: audioUrl });
+                    };
+
+                    if (autoPlayCheckbox) {
+                        autoPlayCheckbox.checked = isAutoPlayOn;
+                        autoPlayCheckbox.onchange = async (e) => {
+                            isAutoPlayOn = e.target.checked;
+                            await chrome.storage.local.set({ autoPlayConfig: isAutoPlayOn });
+                        };
+
+                        if (isAutoPlayOn) {
+                            chrome.runtime.sendMessage({ action: 'playAudio', url: audioUrl });
+                        }
+                    }
+                }
+
                 if (isAutoAddOn) saveWordData();
             }
         }
@@ -333,25 +397,25 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-async function handleCustomDictClick(e, word) {
-    const syncData = await chrome.storage.sync.get(['customDictUrl']);
-    const urlTemplate = syncData.customDictUrl || 'https://dictionary.cambridge.org/dictionary/english/{%s}';
-    const url = urlTemplate.replace('{%s}', encodeURIComponent(word));
-    window.open(url, '_blank');
-}
-
 async function saveWordData() {
     if (!fetchedDataCache || !fetchedDataCache.extracted) return;
     const { wordbook } = await chrome.storage.local.get(['wordbook']);
     const wb = wordbook || [];
 
     if (wb.length >= 100) {
-        alert('单词本已满 (Wordbook is full)');
+        alert('Wordbook is full');
         const shadow = popupNode.shadow;
         shadow.querySelector('#wl-btn-add').disabled = true;
         shadow.querySelector('#wl-auto-add').disabled = true;
         isAutoAddOn = false;
         shadow.querySelector('#wl-auto-add').checked = false;
+
+        const wordbookBtn = shadow.querySelector('#wl-btn-wordbook');
+        if (wordbookBtn) {
+            wordbookBtn.classList.add('wl-btn-full');
+            wordbookBtn.title = 'wordbook is full, please clear wordbook';
+        }
+
         await chrome.storage.local.set({ autoAddConfig: false });
         updateActionButtons();
         return;
@@ -386,12 +450,52 @@ async function saveWordData() {
 
         wb.push(flattened);
         await chrome.storage.local.set({ wordbook: wb });
+
+        showWordbookCounterAnim('+1');
+
+        if (wb.length >= 100) {
+            await loadSettingsAndState();
+        }
     }
 }
 
 async function removeWordData() {
     const { wordbook } = await chrome.storage.local.get(['wordbook']);
     if (!wordbook) return;
+
+    // Only animate if the word was actually removed
+    const existingIndex = wordbook.findIndex(item => item.word === currentWord);
+    if (existingIndex === -1) return;
+
     const newWb = wordbook.filter(item => item.word !== currentWord);
     await chrome.storage.local.set({ wordbook: newWb });
+
+    showWordbookCounterAnim('-1');
+
+    // Check if we dropped below 100 and need to clear the full status
+    if (wordbook.length >= 100 && newWb.length < 100) {
+        await loadSettingsAndState();
+    }
+}
+
+function showWordbookCounterAnim(text) {
+    const shadow = popupNode.shadow;
+    const wordbookBtn = shadow.querySelector('#wl-btn-wordbook');
+    if (!wordbookBtn) return;
+
+    const container = shadow.querySelector('.wl-btn-wordbook');
+
+    const animEl = document.createElement('div');
+    animEl.className = 'wl-counter-anim';
+    animEl.textContent = text;
+    if (text === '-1') {
+        animEl.style.color = '#dc3545'; // red for remove
+    }
+
+    container.appendChild(animEl);
+
+    // Trigger animation then remove
+    setTimeout(() => {
+        animEl.remove();
+    }, 1500);
 }

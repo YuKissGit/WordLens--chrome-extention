@@ -9,17 +9,25 @@
 
 <body>
     <h2>WordLens Settings</h2>
+
     <div id="status"></div>
+
     <div class="form-group">
         <label>Pixabay API Key</label>
         <input type="text" id="pixabayKey" placeholder="Your Pixabay API Key">
     </div>
-    <div class="form-group">
-        <label>Custom Dictionary URL (use {%s} for word)</label>
-        <input type="text" id="customDictUrl" placeholder="https://dictionary.cambridge.org/dictionary/english/{%s}">
+
+    <div class="form-group" id="dictionariesSection">
+        <label>Custom Dictionaries</label>
+        <div id="dictionariesList"></div>
+        <button id="addDictBtn" type="button" class="btn-secondary">+ Add Dictionary</button>
     </div>
-    <button id="saveBtn">Save Settings</button>
-    <button id="instructionBtn" class="footer-btn">How to Use (GitHub)</button>
+
+    <div class="save">
+        <button id="instructionBtn" class="footer-btn">User Guide for WordLens</button>
+        <button id="saveBtn">Save Settings</button>
+    </div>
+
 
     <script src="popup.js"></script>
 </body>

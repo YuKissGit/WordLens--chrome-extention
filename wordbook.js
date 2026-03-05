@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.querySelector('#wordTable tbody');
     const copyBtn = document.getElementById('copyBtn');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
     const clearBtn = document.getElementById('clearBtn');
     let currentWords = [];
 
@@ -54,6 +55,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }).catch(err => {
             alert('Failed to copy. Please allow clipboard permissions.');
         });
+    });
+
+    exportCsvBtn.addEventListener('click', () => {
+        if (currentWords.length === 0) return alert('Wordbook is empty.');
+
+        let csvContent = 'Word,Definition,Example,Synonyms,Antonyms\n';
+        currentWords.forEach(item => {
+            const escapeCsv = (str) => {
+                if (!str) return '""';
+                let s = str.toString().replace(/"/g, '""');
+                return `"${s}"`;
+            };
+
+            const word = escapeCsv(item.word);
+            const def = escapeCsv(item.definition);
+            const ex = escapeCsv(item.example);
+            const syn = escapeCsv((item.synonyms || []).join(', '));
+            const ant = escapeCsv((item.antonyms || []).join(', '));
+
+            csvContent += `${word},${def},${ex},${syn},${ant}\n`;
+        });
+
+        const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.setAttribute('download', 'wordbook.csv');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
     });
 
     clearBtn.addEventListener('click', () => {

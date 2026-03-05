@@ -1,13 +1,14 @@
 body {
-    width: 300px;
+    width: 600px;
     font-family: Arial, sans-serif;
     padding: 15px;
     margin: 0;
     background: #ffffff;
 }
 
+
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
 label {
@@ -26,7 +27,7 @@ input[type="text"] {
 }
 
 button {
-    width: 100%;
+    width: 40%;
     padding: 8px;
     background: #4285f4;
     color: white;
@@ -40,10 +41,60 @@ button:hover {
     background: #357ae8;
 }
 
+.btn-secondary {
+    background: #f1f3f4;
+    color: #333;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+
+.btn-secondary:hover {
+    background: #e8eaed;
+}
+
 .footer-btn {
     background: #f1f3f4;
     color: #333;
     border: 1px solid #ccc;
+}
+
+.dict-item {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: center;
+}
+
+.dict-item input[type="text"] {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.dict-item .dict-name {
+    flex: 0 0 80px;
+
+}
+
+
+.btn-icon {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: 1px solid #ccc;
+    color: red;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.btn-icon:hover {
+    background: #ffe6e6;
+    border-color: red;
 }
 
 .footer-btn:hover {
@@ -60,4 +111,15 @@ button:hover {
 
 .error {
     color: red !important;
+}
+
+#dictionariesSection {
+    margin-top: 20px;
+}
+
+.save {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
 }

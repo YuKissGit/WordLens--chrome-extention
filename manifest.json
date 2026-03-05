@@ -2,10 +2,11 @@
     "manifest_version": 3,
     "name": "WordLens Extension",
     "version": "1.0",
-    "description": "Select English words on any webpage to see dictionary definitions and Google background images.",
+    "description": "Select English words on any webpage to see dictionary definitions and images.",
     "permissions": [
         "storage",
-        "activeTab"
+        "activeTab",
+        "offscreen"
     ],
     "host_permissions": [
         "<all_urls>"

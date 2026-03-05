@@ -12,7 +12,8 @@
         <h1>Your Wordbook</h1>
         <div class="toolbar">
             <button id="copyBtn">Copy All</button>
-            <button id="clearBtn" class="danger">Clear Wordbook</button>
+            <button id="exportCsvBtn">Export as CSV</button>
+            <button id="clearBtn" class="danger">Clear All</button>
         </div>
         <table id="wordTable">
             <thead>
@@ -28,6 +29,17 @@
                 <!-- Data injected here -->
             </tbody>
         </table>
+        <div class="notice">
+            <p>Note:
+                <br>• This extension does not collect or upload your word data. All data stays on your local browser.
+                <br>• The word list does not sync across devices.
+                <br>• If you switch your Chrome account or use another browser, your saved words will not be available.
+                <br>• If you clear browser data, uninstall the extension, or reinstall the browser, your saved words may
+                be permanently deleted.
+                <br>• To ensure stable performance, the word book can store up to 100 words. When the limit is reached,
+                please clear wordbook before adding new ones.
+            </p>
+        </div>
     </div>
     <script src="wordbook.js"></script>
 </body>
