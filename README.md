@@ -1,7 +1,7 @@
 # WordLens Extension - User Guide
 
 ## A Note from Yuki
-<img src="img/icon.svg" width="500"> 
+<img src="img/icon.svg" width="70"> 
 While learning languages, I often ran into a few frustrations: dictionaries without visual context, no quick way to hear the pronunciation of a word I selected, and no simple place to save and review the words I looked up.
 
 I created WordLens to solve these problems for myself.
@@ -16,7 +16,8 @@ I plan to keep using this tool myself for a long time. If you find it helpful to
 Welcome to the **WordLens** browser extension! WordLens is designed to help you quickly get dictionary definitions, audio pronunciations, visual context images, and manage your vocabulary simply by highlighting English text on any webpage.
 
 This guide will help you configure WordLens and get the most out of its features.
-<img src="img/home-showcase.png" width="70"> 
+
+<img src="img/home-showcase.png" width="500"> 
 
 ---
 
