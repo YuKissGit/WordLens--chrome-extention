@@ -15,7 +15,7 @@ Welcome to the **WordLens** browser extension! WordLens is designed to help you 
 
 This guide will help you configure WordLens and get the most out of its features.
 
-                                            <img src="img/icon.svg" width="70"> 
+                                       <img src="img/icon.svg" width="70"> 
 
 ---
 
