@@ -14,7 +14,7 @@ I plan to keep using this tool myself for a long time. If you find it helpful to
 Welcome to the **WordLens** browser extension! WordLens is designed to help you quickly get dictionary definitions, audio pronunciations, visual context images, and manage your vocabulary simply by highlighting English text on any webpage.
 
 This guide will help you configure WordLens and get the most out of its features.
-<img src="img/icon.svg" width="700"> 
+<img src="img/icon.svg" width="70"> 
 
 ---
 
