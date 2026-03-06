@@ -14,6 +14,7 @@ I plan to keep using this tool myself for a long time. If you find it helpful to
 Welcome to the **WordLens** browser extension! WordLens is designed to help you quickly get dictionary definitions, audio pronunciations, visual context images, and manage your vocabulary simply by highlighting English text on any webpage.
 
 This guide will help you configure WordLens and get the most out of its features.
+<img src="img/home-showcase.png" width="700"> 
 
 ---
 
@@ -36,7 +37,7 @@ To display context images, you need to configure a free Pixabay API Key. Please 
 ---
 
 ## 2. Features & Usage
-
+<img src="img/search.gif" width="700"> 
 ### 2.1 Basic Translation & Audio
 - **Lookup**: On any English webpage, **highlight** any English word or short phrase (up to 50 characters). Release your mouse, and the WordLens popup will appear dead-center on your screen.
 - **Pronunciation**: In the popup, click the 🔊 (speaker) icon next to the phonetic spelling to hear the native pronunciation.
@@ -56,7 +57,7 @@ If you need more detailed definitions, you can quickly jump to professional onli
 
 ### 2.3 Wordbook (Vocabulary Manager)
 Found a word you want to memorize? WordLens includes a lightweight Wordbook module.
-
+<img src="img/wordBook.gif" width="700"> 
 - **Manual Add**: Click the `Add this word` button in the popup to save the word, its primary definition, and an example sentence to your Wordbook. (A green `+1` animation will appear confirming it was saved).
 - **Remove**: Click `Remove this word` to delete it.
 - **Auto-add**: Check the `Auto-add` box to automatically save every new word you highlight to your Wordbook.
